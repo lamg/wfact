@@ -8,12 +8,20 @@ import (
 	"time"
 )
 
+// WriterFct is an interface for genariting io.Writers
+// without worrying about what stands behing those io.Writers
 type WriterFct interface {
+	// Get the current io.Writer
 	Current() io.Writer
+	// Close current io.Writer and create one new
 	NextWriter()
+	// Returns the error of a call to NextWriter
 	Err() error
 }
 
+// Truncater is an implementation of WriterFct that uses
+// an os.File as io.Writer and truncates at each call to
+// NextWriter
 type Truncater struct {
 	filename string
 	w        *os.File
@@ -74,6 +82,7 @@ func (d *DateArchiver) Err() (e error) {
 	return
 }
 
+// DWF is a dummy writer factory for testing
 type DWF struct {
 	bf *bytes.Buffer
 }
@@ -90,9 +99,14 @@ func (d *DWF) Current() (w io.Writer) {
 
 func (d *DWF) NextWriter() {
 	d.bf.Reset()
-
 }
 
 func (d *DWF) Err() (e error) {
+	return
+}
+
+// Content returns the content of the current writer
+func (d *DWF) Content() (bs []byte) {
+	bs = d.bf.Bytes()
 	return
 }
