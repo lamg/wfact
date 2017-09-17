@@ -139,7 +139,7 @@ func (d *DWF) NextWriter() {
 }
 
 // Err returns no error. Made for implementing WriterFct
-func (d *DWF) Err() (e error) {
+func (d *DWF) Err() (e *errors.Error) {
 	return
 }
 
