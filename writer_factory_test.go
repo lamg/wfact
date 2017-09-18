@@ -12,8 +12,7 @@ var (
 )
 
 func TestWriterFact(t *testing.T) {
-	tr := new(Truncater)
-	tr.Init(fname)
+	tr := NewTruncater(fname)
 	tr.NextWriter()
 	require.True(t, tr.Err() == nil)
 	tr.Current().Write(cont)
