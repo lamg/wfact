@@ -36,9 +36,10 @@ type Truncater struct {
 	e        *errors.Error
 }
 
-// Init initializes Truncater
-func (wf *Truncater) Init(fname string) {
-	wf.filename = fname
+// NewTruncater creates a new Truncater
+func NewTruncater(fname string) (wf *Truncater) {
+	wf = &Truncater{filename: fname}
+	return
 }
 
 // NextWriter truncates the *os.File with name fname
