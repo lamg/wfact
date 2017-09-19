@@ -29,8 +29,7 @@ func TestWriterFact(t *testing.T) {
 }
 
 func TestDateArchiver(t *testing.T) {
-	dt := new(DateArchiver)
-	dt.Init(fname)
+	dt := NewDateArchiver(fname)
 	dt.NextWriter()
 	require.True(t, dt.Err() == nil)
 	dt.Current().Write(cont)

@@ -79,9 +79,10 @@ type DateArchiver struct {
 	e             *errors.Error
 }
 
-// Init initializes DateArchiver
-func (d *DateArchiver) Init(fname string) {
-	d.filename = fname
+// NewDateArchiver creates a new DateArchiver
+func NewDateArchiver(fname string) (d *DateArchiver) {
+	d = &DateArchiver{filename: fname}
+	return
 }
 
 // NextWriter closes the current file and creates
