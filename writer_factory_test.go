@@ -1,8 +1,8 @@
 package wfact
 
 import (
+	fs "github.com/lamg/filesystem"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"testing"
 )
 
@@ -12,30 +12,40 @@ var (
 )
 
 func TestWriterFact(t *testing.T) {
-	tr := NewTruncater(fname)
-	tr.NextWriter()
-	require.True(t, tr.Err() == nil)
-	tr.Current().Write(cont)
-	var e error
-	var bs []byte
-	bs, e = ioutil.ReadFile(fname)
-	require.NoError(t, e)
-	require.Equal(t, bs, cont)
-	tr.NextWriter()
-	require.True(t, tr.Err() == nil)
-	bs, e = ioutil.ReadFile(fname + "~")
-	require.NoError(t, e)
-	require.Equal(t, bs, cont)
+	fsm := fs.NewBufferFS()
+	tss := []struct {
+		name    string
+		content string
+	}{
+		{"coco.txt", "HolaCoco"},
+	}
+	for _, j := range tss {
+		tr := NewTruncater(j.name, fsm)
+		tr.NextWriter()
+		require.True(t, tr.Err() == nil)
+		_, e := tr.Current().Write([]byte(j.content))
+		require.NoError(t, e)
+		bf, ok := fsm.GetBuffer(j.name)
+		require.True(t, ok)
+		require.True(t, bf.String() == j.content)
+	}
 }
 
 func TestDateArchiver(t *testing.T) {
-	dt := NewDateArchiver(fname)
-	dt.NextWriter()
-	require.True(t, dt.Err() == nil)
-	dt.Current().Write(cont)
-	var e error
-	var bs []byte
-	bs, e = ioutil.ReadFile(dt.cfn)
-	require.NoError(t, e)
-	require.Equal(t, bs, cont)
+	fsm := fs.NewBufferFS()
+	tss := []struct {
+		name    string
+		content string
+	}{
+		{"coco.txt", "hola coco"},
+	}
+	for _, j := range tss {
+		dt := NewDateArchiver(j.name, fsm)
+		dt.NextWriter()
+		require.True(t, dt.Err() == nil)
+		dt.Current().Write([]byte(j.content))
+		bf, ok := fsm.GetBuffer(dt.cfn)
+		require.True(t, ok)
+		require.Equal(t, bf.String(), j.content)
+	}
 }

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/lamg/errors"
+	fs "github.com/lamg/filesystem"
 	"io"
-	"os"
 	"time"
 )
 
@@ -32,13 +32,15 @@ type WriterFct interface {
 // NextWriter
 type Truncater struct {
 	filename string
-	w        *os.File
+	w        fs.File
+	fsm      fs.FileSystem
 	e        *errors.Error
 }
 
 // NewTruncater creates a new Truncater
-func NewTruncater(fname string) (wf *Truncater) {
-	wf = &Truncater{filename: fname}
+func NewTruncater(fname string,
+	fsm fs.FileSystem) (wf *Truncater) {
+	wf = &Truncater{filename: fname, fsm: fsm}
 	return
 }
 
@@ -47,9 +49,9 @@ func (wf *Truncater) NextWriter() {
 	if wf.w != nil {
 		wf.w.Close()
 	}
-	os.Rename(wf.filename, wf.filename+"~")
+	wf.fsm.Rename(wf.filename, wf.filename+"~")
 	var e error
-	wf.w, e = os.Create(wf.filename)
+	wf.w, e = wf.fsm.Create(wf.filename)
 	if e != nil {
 		wf.e = &errors.Error{
 			Code: ErrorNWTrunc,
@@ -75,13 +77,15 @@ func (wf *Truncater) Err() (e *errors.Error) {
 // as a number appended at the end of the file name
 type DateArchiver struct {
 	filename, cfn string
-	w             *os.File
+	w             fs.File
 	e             *errors.Error
+	fsm           fs.FileSystem
 }
 
 // NewDateArchiver creates a new DateArchiver
-func NewDateArchiver(fname string) (d *DateArchiver) {
-	d = &DateArchiver{filename: fname}
+func NewDateArchiver(fname string,
+	fsm fs.FileSystem) (d *DateArchiver) {
+	d = &DateArchiver{filename: fname, fsm: fsm}
 	return
 }
 
@@ -97,7 +101,7 @@ func (d *DateArchiver) NextWriter() {
 		d.filename, nw.Year(), nw.Month(), nw.Day(), nw.Hour(),
 		nw.Minute(), nw.Second())
 	var ec error
-	d.w, ec = os.Create(d.cfn)
+	d.w, ec = d.fsm.Create(d.cfn)
 	if ec != nil {
 		d.e = &errors.Error{
 			Code: ErrorNWDtA,
