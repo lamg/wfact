@@ -97,9 +97,8 @@ func (d *DateArchiver) NextWriter() {
 	}
 	var nw time.Time
 	nw = time.Now()
-	d.cfn = fmt.Sprintf("%s.%d%d%d%d%d%d",
-		d.filename, nw.Year(), nw.Month(), nw.Day(), nw.Hour(),
-		nw.Minute(), nw.Second())
+	d.cfn = fmt.Sprintf("%s.%s",
+		d.filename, nw.Format(time.RFC3339))
 	var ec error
 	d.w, ec = d.fsm.Create(d.cfn)
 	if ec != nil {
