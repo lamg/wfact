@@ -3,17 +3,9 @@ package wfact
 import (
 	"bytes"
 	"fmt"
-	"github.com/lamg/errors"
 	fs "github.com/lamg/filesystem"
 	"io"
 	"time"
-)
-
-const (
-	// ErrorNWTrunc is the error set by Truncater.NextWriter
-	ErrorNWTrunc = iota
-	// ErrorNWDtA is the error set by DateArchiver.NextWriter
-	ErrorNWDtA
 )
 
 // WriterFct is an interface for genariting io.Writers
@@ -24,7 +16,7 @@ type WriterFct interface {
 	// Close current io.Writer and create one new
 	NextWriter()
 	// Returns the error of a call to NextWriter
-	Err() *errors.Error
+	Err() error
 }
 
 // Truncater is an implementation of WriterFct that uses
@@ -34,7 +26,7 @@ type Truncater struct {
 	filename string
 	w        fs.File
 	fsm      fs.FileSystem
-	e        *errors.Error
+	e        error
 }
 
 // NewTruncater creates a new Truncater
@@ -50,14 +42,7 @@ func (wf *Truncater) NextWriter() {
 		wf.w.Close()
 	}
 	wf.fsm.Rename(wf.filename, wf.filename+"~")
-	var e error
-	wf.w, e = wf.fsm.Create(wf.filename)
-	if e != nil {
-		wf.e = &errors.Error{
-			Code: ErrorNWTrunc,
-			Err:  e,
-		}
-	}
+	wf.w, wf.e = wf.fsm.Create(wf.filename)
 }
 
 // Current returns the *os.File as a io.Writer
@@ -67,7 +52,7 @@ func (wf *Truncater) Current() (w io.Writer) {
 }
 
 // Err returns any error during operation
-func (wf *Truncater) Err() (e *errors.Error) {
+func (wf *Truncater) Err() (e error) {
 	e = wf.e
 	return
 }
@@ -78,7 +63,7 @@ func (wf *Truncater) Err() (e *errors.Error) {
 type DateArchiver struct {
 	filename, cfn string
 	w             fs.File
-	e             *errors.Error
+	e             error
 	fsm           fs.FileSystem
 }
 
@@ -99,14 +84,7 @@ func (d *DateArchiver) NextWriter() {
 	nw = time.Now()
 	d.cfn = fmt.Sprintf("%s.%s",
 		d.filename, nw.Format(time.RFC3339))
-	var ec error
-	d.w, ec = d.fsm.Create(d.cfn)
-	if ec != nil {
-		d.e = &errors.Error{
-			Code: ErrorNWDtA,
-			Err:  ec,
-		}
-	}
+	d.w, d.e = d.fsm.Create(d.cfn)
 }
 
 // Current returns the current *os.File as a io.Writer
@@ -116,7 +94,7 @@ func (d *DateArchiver) Current() (w io.Writer) {
 }
 
 // Err returns any error during operation
-func (d *DateArchiver) Err() (e *errors.Error) {
+func (d *DateArchiver) Err() (e error) {
 	e = d.e
 	return
 }
@@ -144,7 +122,7 @@ func (d *DWF) NextWriter() {
 }
 
 // Err returns no error. Made for implementing WriterFct
-func (d *DWF) Err() (e *errors.Error) {
+func (d *DWF) Err() (e error) {
 	return
 }
 
